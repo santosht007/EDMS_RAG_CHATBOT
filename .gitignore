@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual Environment
+venv/
+.venv/
+
+# Vector Database
+vectorstore/index.faiss
+vectorstore/metadata.pkl
+
+# Logs
+logs/
+
+# IDE
+.vscode/
+.idea/
+
+# Environment Variables
+.env

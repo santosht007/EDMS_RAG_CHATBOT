@@ -8,6 +8,9 @@ from src.llm.ollama_client import OllamaClient
 from src.llm.prompt_builder import PromptBuilder
 
 from src.display.output_formatter import OutputFormatter
+from src.memory.conversation_memory import ConversationMemory
+
+from src.validation.evidence_validator import EvidenceValidator
 
 
 # --------------------------------------------------
@@ -75,6 +78,29 @@ else:
 
 
 # --------------------------------------------------
+# Initialize Conversation Memory
+# --------------------------------------------------
+
+memory = ConversationMemory(
+    embedding_model=model,
+    max_history=5
+)
+
+print("Conversation Memory Ready.")
+
+
+# --------------------------------------------------
+# Initialize Evidence Validator
+# --------------------------------------------------
+
+validator = EvidenceValidator(
+    embedding_model=model
+)
+
+print("Evidence Validator Ready.")
+
+
+# --------------------------------------------------
 # Interactive Chat
 # --------------------------------------------------
 
@@ -100,7 +126,7 @@ while True:
     OutputFormatter.display_question(question)
 
     # -----------------------------------------
-    # Search
+    # Search Documents
     # -----------------------------------------
 
     results = search_engine.search(
@@ -114,12 +140,49 @@ while True:
         continue
 
     # -----------------------------------------
+    # Evidence Validation
+    # -----------------------------------------
+
+    validation = validator.validate(
+        question=question,
+        documents=results
+    )
+
+    evidence_warning = validation["warning"]
+
+    if evidence_warning:
+
+        OutputFormatter.print_sub_header(
+            "Evidence Validation"
+        )
+
+        print(evidence_warning)
+
+    # -----------------------------------------
+    # Context-Aware Memory
+    # -----------------------------------------
+
+    if memory.is_follow_up(question):
+
+        print("\nUsing previous conversation...")
+
+        conversation_history = memory.get_recent_history(3)
+
+    else:
+
+        print("\nStarting a new conversation...")
+
+        conversation_history = []
+
+    # -----------------------------------------
     # Build Prompt
     # -----------------------------------------
 
     prompt = PromptBuilder.build_prompt(
-        question,
-        results
+        question=question,
+        documents=results,
+        conversation_history=conversation_history,
+        evidence_warning=evidence_warning
     )
 
     # -----------------------------------------
@@ -129,6 +192,15 @@ while True:
     OutputFormatter.print_sub_header("Thinking...")
 
     answer = llm.generate(prompt)
+
+    # -----------------------------------------
+    # Save Conversation
+    # -----------------------------------------
+
+    memory.add_interaction(
+        question=question,
+        answer=answer
+    )
 
     # -----------------------------------------
     # Display Answer

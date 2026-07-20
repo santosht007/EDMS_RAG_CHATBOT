@@ -10,8 +10,8 @@ class FAISSManager:
     """
     Manages the FAISS vector database.
 
-    Responsibilities:
-    -----------------
+    Responsibilities
+    ----------------
     - Create FAISS index
     - Add embedding vectors
     - Save FAISS index
@@ -29,9 +29,7 @@ class FAISSManager:
         """
 
         self.embedding_dimension = embedding_dimension
-
         self.index = faiss.IndexFlatL2(embedding_dimension)
-
         self.metadata = []
 
     # --------------------------------------------------
@@ -56,7 +54,6 @@ class FAISSManager:
         )
 
         self.index.add(vectors)
-
         self.metadata.extend(embedding_documents)
 
         print(f"\nAdded {len(vectors)} vectors to FAISS.")
@@ -101,8 +98,6 @@ class FAISSManager:
             str(FAISS_INDEX_FILE)
         )
 
-        print("\nFAISS index loaded successfully.")
-
     # --------------------------------------------------
     # Save Metadata
     # --------------------------------------------------
@@ -113,7 +108,6 @@ class FAISSManager:
         """
 
         with open(METADATA_FILE, "wb") as file:
-
             pickle.dump(self.metadata, file)
 
         print("Metadata saved successfully.")
@@ -128,10 +122,7 @@ class FAISSManager:
         """
 
         with open(METADATA_FILE, "rb") as file:
-
             self.metadata = pickle.load(file)
-
-        print("Metadata loaded successfully.")
 
     # --------------------------------------------------
     # Get Metadata

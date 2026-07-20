@@ -1,41 +1,72 @@
-from src.utils.source_manager import SourceManager
+from collections import defaultdict
 
 
 class OutputFormatter:
     """
-    Handles all console output formatting for the EDMS AI Assistant.
+    Handles all console output formatting for the EDMS AI Chatbot.
     """
 
-    LINE = "=" * 70
-    SUB_LINE = "-" * 70
+    LINE = "-" * 60
 
     # --------------------------------------------------
-    # Headers
+    # Startup Screen
     # --------------------------------------------------
 
     @staticmethod
-    def print_header(title):
+    def display_startup(
+        embedding_model="all-MiniLM-L6-v2",
+        chunk_count=0,
+        llm_model="llama3.2:3b"
+    ):
+        """
+        Display chatbot startup dashboard.
+        """
 
-        print("\n" + OutputFormatter.LINE)
-        print(title)
+        print()
         print(OutputFormatter.LINE)
+        print("  EDMS_AI_chatbot")
+        print(OutputFormatter.LINE)
+        print()
 
-    @staticmethod
-    def print_sub_header(title):
+        print("Initializing AI Components...\n")
 
-        print("\n" + OutputFormatter.SUB_LINE)
-        print(title)
-        print(OutputFormatter.SUB_LINE)
+        print("[✓] Embedding Model")
+        print("Engine : Sentence Transformers")
+        print(f"Model  : {embedding_model}")
+        print()
 
-    # --------------------------------------------------
-    # Question
-    # --------------------------------------------------
+        print("[✓] Vector Database")
+        print("Engine : FAISS")
+        print(f"Indexed Chunks : {chunk_count}")
+        print()
 
-    @staticmethod
-    def display_question(question):
+        print("[✓] Semantic Search Engine")
+        print("Status : Ready")
+        print()
 
-        OutputFormatter.print_header("QUESTION")
-        print(question)
+        print("[✓] Large Language Model")
+        print("Engine : Ollama")
+        print(f"Model  : {llm_model}")
+        print("Status : Connected")
+        print()
+
+        print("[✓] Conversation Memory")
+        print("Status : Active")
+        print()
+
+        print(OutputFormatter.LINE)
+        print("System Status : READY")
+        print(OutputFormatter.LINE)
+        print()
+
+        print("Hello, I am EDMS_AI_chatbot.")
+        print()
+        print("Thank you for contacting me.")
+        print()
+        print("I can assist you with EDMS manuals, procedures,")
+        print("workflows, and document-related questions.")
+        print()
+        print("How may I help you?")
 
     # --------------------------------------------------
     # Answer
@@ -43,32 +74,40 @@ class OutputFormatter:
 
     @staticmethod
     def display_answer(answer):
-
-        OutputFormatter.print_header("EDMS AI ANSWER")
+        """
+        Display only the chatbot answer.
+        """
+        print()
         print(answer)
+        print()
 
     # --------------------------------------------------
-    # Intelligent Source Display
+    # References
     # --------------------------------------------------
 
     @staticmethod
     def display_references(results):
+        """
+        Display consolidated reference documents.
+        """
 
-        OutputFormatter.print_header("SOURCE DOCUMENTS")
+        manuals = defaultdict(set)
 
-        grouped_sources = SourceManager.organize_sources(results)
+        for doc in results:
+            manuals[doc.manual_name].add(doc.slide_number)
 
-        for manual, slides in grouped_sources.items():
+        print("Reference:\n")
 
-            print(f"Manual : {manual}")
+        for manual, slides in manuals.items():
 
-            ordered_slides = sorted(slides)
+            slide_numbers = sorted(slides)
 
             slide_text = ", ".join(
                 str(slide)
-                for slide in ordered_slides
+                for slide in slide_numbers
             )
 
+            print(f"Manual : {manual}")
             print(f"Slides : {slide_text}")
             print()
 
@@ -78,23 +117,19 @@ class OutputFormatter:
 
     @staticmethod
     def info(message):
-
-        print(f"\n[INFO] {message}")
+        print(f"[INFO] {message}")
 
     @staticmethod
     def success(message):
-
-        print(f"\n[SUCCESS] {message}")
+        print(f"[SUCCESS] {message}")
 
     @staticmethod
     def warning(message):
-
-        print(f"\n[WARNING] {message}")
+        print(f"[WARNING] {message}")
 
     @staticmethod
     def error(message):
-
-        print(f"\n[ERROR] {message}")
+        print(f"[ERROR] {message}")
 
     # --------------------------------------------------
     # Goodbye
@@ -103,5 +138,6 @@ class OutputFormatter:
     @staticmethod
     def goodbye():
 
-        print("\nThank you for using EDMS AI Assistant.")
+        print()
+        print("Thank you for using EDMS_AI_chatbot.")
         print("Goodbye!")

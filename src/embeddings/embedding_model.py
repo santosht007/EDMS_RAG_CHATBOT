@@ -34,24 +34,13 @@ class EmbeddingModel:
 
         if self.model is None:
 
-            print("=" * 60)
-            print("Loading Embedding Model")
-            print("=" * 60)
-
-            print(f"Model Name : {self.model_name}")
-            print("\nDownloading model (first time only)...")
-
             try:
-
                 self.model = SentenceTransformer(self.model_name)
-
-                print("\nEmbedding model loaded successfully!")
 
             except Exception as e:
 
                 print("\nFailed to load embedding model.")
                 print(f"Error: {e}")
-
                 raise
 
         return self.model

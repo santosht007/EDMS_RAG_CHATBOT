@@ -1,3 +1,10 @@
+"""
+============================================================
+EDMS AI Assistant
+Version : 2.3
+============================================================
+"""
+
 from config import EMBEDDING_DIMENSION
 
 from src.embeddings.embedding_model import EmbeddingModel
@@ -10,58 +17,58 @@ from src.llm.prompt_builder import PromptBuilder
 from src.display.output_formatter import OutputFormatter
 from src.memory.conversation_memory import ConversationMemory
 
-from src.validation.evidence_validator import EvidenceValidator
 
-
-# --------------------------------------------------
+# ==========================================================
 # Application Header
-# --------------------------------------------------
+# ==========================================================
 
 OutputFormatter.print_header("EDMS AI Assistant")
-print("Version 2.0")
+print("Version 2.3")
 
 
-# --------------------------------------------------
+# ==========================================================
 # Load Embedding Model
-# --------------------------------------------------
-
-print("\nLoading embedding model...")
+# ==========================================================
 
 embedding_model = EmbeddingModel()
 model = embedding_model.load_model()
 
-print("Embedding model loaded.")
+print("✓ Embedding Model Ready.")
 
 
-# --------------------------------------------------
-# Load FAISS Database
-# --------------------------------------------------
+# ==========================================================
+# Load FAISS Index
+# ==========================================================
 
-print("\nLoading FAISS index...")
+print("\nLoading FAISS Index...")
 
-faiss_manager = FAISSManager(EMBEDDING_DIMENSION)
+faiss_manager = FAISSManager(
+    EMBEDDING_DIMENSION
+)
 
 faiss_manager.load_index()
 faiss_manager.load_metadata()
 
-print(f"Loaded {faiss_manager.total_vectors()} vectors.")
+print(f"✓ Loaded {faiss_manager.total_vectors()} document chunks.")
 
 
-# --------------------------------------------------
-# Create Search Engine
-# --------------------------------------------------
+# ==========================================================
+# Initialize Search Engine
+# ==========================================================
+
+print("\nInitializing Search Engine...")
 
 search_engine = SearchEngine(
     embedding_model=model,
     faiss_manager=faiss_manager
 )
 
-print("Search Engine Ready.")
+print("✓ Search Engine Ready.")
 
 
-# --------------------------------------------------
-# Initialize Ollama
-# --------------------------------------------------
+# ==========================================================
+# Connect to Ollama
+# ==========================================================
 
 print("\nConnecting to Ollama...")
 
@@ -69,68 +76,71 @@ llm = OllamaClient()
 
 if llm.test_connection():
 
-    print("Connected Successfully.")
+    print("✓ Connected Successfully.")
 
 else:
 
-    print("Cannot connect to Ollama.")
-    exit()
+    raise SystemExit(
+        "\n❌ Cannot connect to Ollama.\n"
+        "Please make sure Ollama is running."
+    )
 
 
-# --------------------------------------------------
+# ==========================================================
 # Initialize Conversation Memory
-# --------------------------------------------------
+# ==========================================================
+
+print("\nInitializing Conversation Memory...")
 
 memory = ConversationMemory(
     embedding_model=model,
     max_history=5
 )
 
-print("Conversation Memory Ready.")
+print("✓ Conversation Memory Ready.")
 
 
-# --------------------------------------------------
-# Initialize Evidence Validator
-# --------------------------------------------------
-
-validator = EvidenceValidator(
-    embedding_model=model
-)
-
-print("Evidence Validator Ready.")
-
-
-# --------------------------------------------------
-# Interactive Chat
-# --------------------------------------------------
+# ==========================================================
+# Chat Loop
+# ==========================================================
 
 OutputFormatter.print_header("EDMS AI Chat")
 
 while True:
 
-    question = input("\nAsk EDMS (type 'exit' to quit): ")
+    question = input(
+        "\nAsk EDMS (type 'exit' to quit): "
+    ).strip()
 
-    if question.lower() == "exit":
+    # ------------------------------------------------------
+
+    if question.lower() in [
+        "exit",
+        "quit",
+        "bye"
+    ]:
 
         OutputFormatter.goodbye()
         break
 
-    if not question.strip():
+    # ------------------------------------------------------
+
+    if not question:
 
         continue
 
-    # -----------------------------------------
+    # ------------------------------------------------------
     # Display Question
-    # -----------------------------------------
+    # ------------------------------------------------------
 
     OutputFormatter.display_question(question)
 
-    # -----------------------------------------
+    # ------------------------------------------------------
     # Search Documents
-    # -----------------------------------------
+    # ------------------------------------------------------
 
     results = search_engine.search(
-        question,
+        query=question,
         top_k=5
     )
 
@@ -139,28 +149,9 @@ while True:
         print("\nNo relevant documents found.")
         continue
 
-    # -----------------------------------------
-    # Evidence Validation
-    # -----------------------------------------
-
-    validation = validator.validate(
-        question=question,
-        documents=results
-    )
-
-    evidence_warning = validation["warning"]
-
-    if evidence_warning:
-
-        OutputFormatter.print_sub_header(
-            "Evidence Validation"
-        )
-
-        print(evidence_warning)
-
-    # -----------------------------------------
-    # Context-Aware Memory
-    # -----------------------------------------
+    # ------------------------------------------------------
+    # Conversation Memory
+    # ------------------------------------------------------
 
     if memory.is_follow_up(question):
 
@@ -174,42 +165,43 @@ while True:
 
         conversation_history = []
 
-    # -----------------------------------------
+    # ------------------------------------------------------
     # Build Prompt
-    # -----------------------------------------
+    # ------------------------------------------------------
 
     prompt = PromptBuilder.build_prompt(
         question=question,
         documents=results,
-        conversation_history=conversation_history,
-        evidence_warning=evidence_warning
+        conversation_history=conversation_history
     )
 
-    # -----------------------------------------
+    # ------------------------------------------------------
     # Generate Answer
-    # -----------------------------------------
+    # ------------------------------------------------------
 
-    OutputFormatter.print_sub_header("Thinking...")
+    OutputFormatter.print_sub_header(
+        "Generating Answer..."
+    )
 
     answer = llm.generate(prompt)
 
-    # -----------------------------------------
+    # ------------------------------------------------------
     # Save Conversation
-    # -----------------------------------------
+    # ------------------------------------------------------
 
     memory.add_interaction(
         question=question,
         answer=answer
     )
 
-    # -----------------------------------------
+    # ------------------------------------------------------
     # Display Answer
-    # -----------------------------------------
+    # ------------------------------------------------------
 
     OutputFormatter.display_answer(answer)
 
-    # -----------------------------------------
+    # ------------------------------------------------------
     # Display References
-    # -----------------------------------------
+    # ------------------------------------------------------
 
     OutputFormatter.display_references(results)

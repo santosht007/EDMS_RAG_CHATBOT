@@ -1,3 +1,6 @@
+from src.utils.source_manager import SourceManager
+
+
 class OutputFormatter:
     """
     Handles all console output formatting for the EDMS AI Assistant.
@@ -7,26 +10,20 @@ class OutputFormatter:
     SUB_LINE = "-" * 70
 
     # --------------------------------------------------
-    # Header
+    # Headers
     # --------------------------------------------------
 
     @staticmethod
     def print_header(title):
 
-        print()
-        print(OutputFormatter.LINE)
+        print("\n" + OutputFormatter.LINE)
         print(title)
         print(OutputFormatter.LINE)
-
-    # --------------------------------------------------
-    # Sub Header
-    # --------------------------------------------------
 
     @staticmethod
     def print_sub_header(title):
 
-        print()
-        print(OutputFormatter.SUB_LINE)
+        print("\n" + OutputFormatter.SUB_LINE)
         print(title)
         print(OutputFormatter.SUB_LINE)
 
@@ -38,88 +35,66 @@ class OutputFormatter:
     def display_question(question):
 
         OutputFormatter.print_header("QUESTION")
-
         print(question)
 
     # --------------------------------------------------
-    # AI Answer
+    # Answer
     # --------------------------------------------------
 
     @staticmethod
     def display_answer(answer):
 
         OutputFormatter.print_header("EDMS AI ANSWER")
-
         print(answer)
 
     # --------------------------------------------------
-    # Reference Documents
+    # Intelligent Source Display
     # --------------------------------------------------
 
     @staticmethod
-    def display_references(documents):
-        """
-        Display unique reference documents.
+    def display_references(results):
 
-        Duplicate definition:
-            Same Manual + Same Slide
-        """
+        OutputFormatter.print_header("SOURCE DOCUMENTS")
 
-        OutputFormatter.print_header("REFERENCE DOCUMENTS")
+        grouped_sources = SourceManager.organize_sources(results)
 
-        if not documents:
+        for manual, slides in grouped_sources.items():
 
-            print("No reference documents found.")
-            return
+            print(f"Manual : {manual}")
 
-        # ---------------------------------------------
-        # Remove duplicates
-        # ---------------------------------------------
+            ordered_slides = sorted(slides)
 
-        unique_documents = {}
-
-        for doc in documents:
-
-            key = (
-                doc.manual_name,
-                doc.slide_number
+            slide_text = ", ".join(
+                str(slide)
+                for slide in ordered_slides
             )
 
-            if key not in unique_documents:
-
-                unique_documents[key] = doc
-
-        # ---------------------------------------------
-        # Sort references
-        # ---------------------------------------------
-
-        sorted_documents = sorted(
-            unique_documents.values(),
-            key=lambda d: (
-                d.manual_name.lower(),
-                d.slide_number
-            )
-        )
-
-        # ---------------------------------------------
-        # Print references
-        # ---------------------------------------------
-
-        for index, doc in enumerate(sorted_documents, start=1):
-
-            print(f"[{index}]")
-
-            print(f"Manual : {doc.manual_name}")
-
-            print(f"Slide  : {doc.slide_number}")
-
-            print(f"Title  : {doc.title}")
-
-            if hasattr(doc, "similarity_score"):
-
-                print(f"Similarity Score : {doc.similarity_score:.4f}")
-
+            print(f"Slides : {slide_text}")
             print()
+
+    # --------------------------------------------------
+    # Status Messages
+    # --------------------------------------------------
+
+    @staticmethod
+    def info(message):
+
+        print(f"\n[INFO] {message}")
+
+    @staticmethod
+    def success(message):
+
+        print(f"\n[SUCCESS] {message}")
+
+    @staticmethod
+    def warning(message):
+
+        print(f"\n[WARNING] {message}")
+
+    @staticmethod
+    def error(message):
+
+        print(f"\n[ERROR] {message}")
 
     # --------------------------------------------------
     # Goodbye
@@ -128,10 +103,5 @@ class OutputFormatter:
     @staticmethod
     def goodbye():
 
-        print()
-
-        print(OutputFormatter.LINE)
-
-        print("Thank you for using EDMS AI Assistant.")
-
-        print(OutputFormatter.LINE)
+        print("\nThank you for using EDMS AI Assistant.")
+        print("Goodbye!")

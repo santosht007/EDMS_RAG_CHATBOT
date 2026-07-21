@@ -1,34 +1,37 @@
-# ===========================================
-# Python Cache
-# ===========================================
-
+# Python
 __pycache__/
-*.py[cod]
+*.pyc
+*.pyo
+*.pyd
 
-# ===========================================
 # Virtual Environment
-# ===========================================
-
 venv/
 
-# ===========================================
 # IDE
-# ===========================================
-
 .vscode/
 .idea/
 
-# ===========================================
 # Logs
-# ===========================================
-
 logs/
 *.log
 
-# ===========================================
-# Operating System
-# ===========================================
-
+# OS
 .DS_Store
 Thumbs.db
-desktop.ini
+
+# Environment
+.env
+
+# Build files
+build/
+dist/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Temporary files
+*.tmp
+
+# Keep the knowledge base
+# (Do NOT ignore these)
+# vectorstore/

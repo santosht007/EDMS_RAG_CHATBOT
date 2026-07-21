@@ -1,8 +1,6 @@
-from pathlib import Path
-
 from src.models.slide_document import SlideDocument
 from src.loaders.powerpoint_loader import PowerPointLoader
-from src.preprocessing.text_cleaner import TextCleaner
+from src.preprocessing.document_cleaner import DocumentCleaner
 
 
 class DocumentParser:
@@ -11,12 +9,14 @@ class DocumentParser:
     """
 
     def __init__(self):
-        # Initialize the text cleaner
-        self.cleaner = TextCleaner()
+
+        # Initialize the new document cleaner
+        self.cleaner = DocumentCleaner()
 
     # ----------------------------------------
     # Parse PowerPoint
     # ----------------------------------------
+
     def parse_powerpoint(self, ppt_directory):
         """
         Parse all PowerPoint manuals into SlideDocument objects.
@@ -36,22 +36,38 @@ class DocumentParser:
                 continue
 
             # Read every slide
-            for slide_number, slide in enumerate(presentation.slides, start=1):
+            for slide_number, slide in enumerate(
+                presentation.slides,
+                start=1
+            ):
 
+                # ----------------------------------
                 # Extract raw text
+                # ----------------------------------
+
                 slide_text = loader.extract_slide_text(slide)
 
+                # ----------------------------------
                 # Clean extracted text
+                # ----------------------------------
+
                 slide_text = self.cleaner.clean(slide_text)
 
-                # Skip completely empty slides
-                if not slide_text:
+                # Skip empty slides
+                if not slide_text.strip():
                     continue
 
-                # First non-empty line becomes the title
+                # ----------------------------------
+                # Title
+                # ----------------------------------
+
                 lines = slide_text.split("\n")
 
-                title = lines[0] if lines else ""
+                title = lines[0].strip() if lines else ""
+
+                # ----------------------------------
+                # Create SlideDocument
+                # ----------------------------------
 
                 document = SlideDocument(
                     manual_name=ppt.name,
@@ -67,6 +83,7 @@ class DocumentParser:
     # ----------------------------------------
     # Future
     # ----------------------------------------
+
     def parse_pdf(self):
         pass
 

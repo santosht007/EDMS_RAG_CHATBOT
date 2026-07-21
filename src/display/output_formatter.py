@@ -1,4 +1,4 @@
-from collections import defaultdict
+from src.utils.source_manager import SourceManager
 
 
 class OutputFormatter:
@@ -18,9 +18,6 @@ class OutputFormatter:
         chunk_count=0,
         llm_model="llama3.2:3b"
     ):
-        """
-        Display chatbot startup dashboard.
-        """
 
         print()
         print(OutputFormatter.LINE)
@@ -74,9 +71,7 @@ class OutputFormatter:
 
     @staticmethod
     def display_answer(answer):
-        """
-        Display only the chatbot answer.
-        """
+
         print()
         print(answer)
         print()
@@ -88,27 +83,17 @@ class OutputFormatter:
     @staticmethod
     def display_references(results):
         """
-        Display consolidated reference documents.
+        Display smart reference list.
         """
 
-        manuals = defaultdict(set)
-
-        for doc in results:
-            manuals[doc.manual_name].add(doc.slide_number)
+        references = SourceManager.organize_sources(results)
 
         print("Reference:\n")
 
-        for manual, slides in manuals.items():
+        for manual, slides in references.items():
 
-            slide_numbers = sorted(slides)
-
-            slide_text = ", ".join(
-                str(slide)
-                for slide in slide_numbers
-            )
-
-            print(f"Manual : {manual}")
-            print(f"Slides : {slide_text}")
+            print(manual)
+            print(f"Slides: {slides}")
             print()
 
     # --------------------------------------------------

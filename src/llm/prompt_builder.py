@@ -1,132 +1,105 @@
 class PromptBuilder:
-    """
-    Builds the final prompt for the EDMS AI Assistant.
-    """
+    """Professional Prompt Builder (Version 2.6)"""
 
     @staticmethod
-    def build_prompt(
-        question,
-        documents,
-        conversation_history=None
-    ):
-        """
-        Build the final prompt sent to Ollama.
-        """
-
-        # --------------------------------------------------------
-        # Conversation History
-        # --------------------------------------------------------
-
-        history_text = ""
-
+    def build_prompt(question, documents, conversation_history=None):
+        history = "No previous conversation."
         if conversation_history:
+            history="\n\n----------------------------------------\n\n".join(
+                [f"User:\n{x.question}\n\nAssistant:\n{x.answer}" for x in conversation_history]
+            )
 
-            history_text += """
-============================================================
-PREVIOUS CONVERSATION
-============================================================
-
-"""
-
-            for conversation in conversation_history:
-
-                history_text += f"""
-User:
-{conversation.question}
-
-Assistant:
-{conversation.answer}
-
-------------------------------------------------------------
-
-"""
-
-        else:
-
-            history_text = "No previous conversation."
-
-        # --------------------------------------------------------
-        # Retrieved Documents
-        # --------------------------------------------------------
-
-        context = ""
-
-        for rank, doc in enumerate(documents, start=1):
-
+        context=""
+        for i,doc in enumerate(documents,1):
             context += f"""
-============================================================
-DOCUMENT {rank}
+DOCUMENT {i}
 
-Manual:
+Manual
+------
 {doc.manual_name}
 
-Slide:
+Slide
+-----
 {doc.slide_number}
 
-Title:
+Title
+-----
 {doc.title}
 
-Content:
+Content
+-------
 {doc.text}
 
+============================================================
 """
 
-        # --------------------------------------------------------
-        # Final Prompt
-        # --------------------------------------------------------
+        return f"""
+ROLE
 
-        prompt = f"""
 You are an experienced EDMS Support Engineer.
 
-Your responsibility is to answer ONLY using the retrieved EDMS manuals.
+Answer ONLY using the retrieved EDMS manuals.
+
+Never use outside knowledge.
 
 ============================================================
 
-RULES
+GUIDELINES
 
-1. Use ONLY the retrieved documents.
+• Answer naturally and professionally.
+• Keep answers concise.
+• Never invent menus, buttons, workflows, permissions or system behaviour.
+• Never mention AI, retrieval, prompts or internal reasoning.
+• Use only documented information.
 
-2. Never use outside knowledge.
+If none of the retrieved manuals answer the question, reply exactly:
 
-3. Never guess.
-
-4. Never invent:
-
-- buttons
-- menus
-- permissions
-- workflows
-- prerequisites
-- file formats
-- system behaviour
-
-5. If the manuals do not contain the requested information,
-clearly state that the manuals do not specify it.
+"The manuals do not specify this information."
 
 ============================================================
 
-IMPORTANT
+PROCEDURES
+
+If the manuals describe a procedure:
+
+• Preserve the original procedure.
+• Preserve existing numbering exactly as written.
+• Do NOT create duplicate numbering.
+• Do NOT renumber existing numbered or bulleted steps.
+• Only create numbered steps if the manuals contain procedural text without numbering.
+• Never add additional steps.
+
+============================================================
+
+NOTE
+
+If the manuals contain documented conditions, include:
+
+Note:
+<conditions>
+
+Otherwise include:
+
+Note:
+None.
+
+============================================================
 
 Do NOT include:
-
-- References
-- Citations
-- Manual names
-- Slide numbers
-- Source documents
-
-The application automatically displays the supporting
-documents after your answer.
+- Summary
+- Procedure
+- Warnings
+- Reference
 
 ============================================================
 
 PREVIOUS CONVERSATION
 
-{history_text}
+{history}
 
 ============================================================
 
-RETRIEVED DOCUMENTS
+RETRIEVED MANUALS
 
 {context}
 
@@ -138,28 +111,20 @@ USER QUESTION
 
 ============================================================
 
-RESPONSE FORMAT
+FINAL RESPONSE FORMAT
 
-Summary
+Answer directly.
 
-Procedure
-(only if applicable)
+If numbered steps already exist in the manuals, preserve them exactly.
 
-Important Conditions
-(write "None" if not specified)
+Otherwise produce short numbered steps.
 
-Warnings
-(write "None" if not specified)
+End with:
 
-============================================================
+Note:
+None.
 
-Keep the answer concise.
+(or documented conditions only)
 
-Do not repeat information.
-
-Only include information explicitly stated in the manuals.
-
-FINAL ANSWER
+Do not output a Reference section.
 """
-
-        return prompt

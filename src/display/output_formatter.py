@@ -116,6 +116,31 @@ class OutputFormatter:
     def error(message):
         print(f"[ERROR] {message}")
 
+
+    # --------------------------------------------------
+    # Manual Not Found
+    # --------------------------------------------------
+
+    @staticmethod
+    def display_not_found():
+        """
+        Display message when the answer is
+        not available in the EDMS manuals.
+        """
+
+        print()
+
+        print("Sorry for the inconvenience.")
+        print()
+
+        print("The above question is not covered in the EDMS manuals.")
+        print()
+
+        print("Please contact EDMS Helpdesk Support:")
+        print()
+
+        print("Email : edms_support@rntbci-nissan.com")
+        print()
     # --------------------------------------------------
     # Goodbye
     # --------------------------------------------------

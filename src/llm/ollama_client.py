@@ -48,7 +48,13 @@ class OllamaClient:
         payload = {
             "model": self.model_name,
             "prompt": prompt,
-            "stream": False
+            "stream": False,
+            "options": {
+                "temperature": 0,
+                "top_p": 0.9,
+                "repeat_penalty": 1.1,
+                "num_predict": 1024
+            }
         }
 
         try:

@@ -2,7 +2,7 @@
 ============================================================
 EDMS AI Chatbot
 Knowledge Base Builder
-Version 1.0
+Version 1.1
 ============================================================
 
 Builds the FAISS knowledge base from EDMS manuals.
@@ -10,6 +10,7 @@ Builds the FAISS knowledge base from EDMS manuals.
 Pipeline
 
 PowerPoint
+Word
     ↓
 DocumentParser
     ↓
@@ -24,8 +25,6 @@ FAISS
 
 import time
 import traceback
-
-from config import PPT_DIR
 
 from src.preprocessing.document_parser import DocumentParser
 from src.chunking.text_chunker import TextChunker
@@ -48,7 +47,7 @@ class KnowledgeBaseBuilder:
         # Initialize embedding model
         self.embedding_model = EmbeddingModel()
 
-        # Load the model
+        # Load embedding model
         self.embedding_model.load_model()
 
         # Initialize embedding generator
@@ -71,6 +70,7 @@ class KnowledgeBaseBuilder:
         self.embeddings = []
 
         self.start_time = None
+
     # --------------------------------------------------
     # Build Pipeline
     # --------------------------------------------------
@@ -119,11 +119,12 @@ class KnowledgeBaseBuilder:
 
     def load_documents(self):
 
-        print("Loading PowerPoint manuals...")
+        print("Loading EDMS manuals...\n")
 
-        self.documents = self.parser.parse_powerpoint(PPT_DIR)
+        self.documents = self.parser.parse_all_documents()
 
-        print(f"✓ Loaded {len(self.documents)} slides.\n")
+        print()
+        print(f"✓ Total documents loaded : {len(self.documents)}\n")
 
     # --------------------------------------------------
     # Create Chunks
@@ -153,7 +154,6 @@ class KnowledgeBaseBuilder:
 
         print(f"\n✓ Generated {len(self.embeddings)} embeddings.\n")
 
-      
     # --------------------------------------------------
     # Build FAISS
     # --------------------------------------------------
@@ -172,7 +172,6 @@ class KnowledgeBaseBuilder:
 
         print()
 
-
     # --------------------------------------------------
     # Save Index
     # --------------------------------------------------
@@ -187,9 +186,6 @@ class KnowledgeBaseBuilder:
 
         print("✓ Knowledge base saved successfully.\n")
 
-
-    
-    
     # --------------------------------------------------
     # Build Summary
     # --------------------------------------------------
@@ -203,12 +199,12 @@ class KnowledgeBaseBuilder:
         print("=" * 60)
         print()
 
-        print(f"Slides Processed : {len(self.documents)}")
-        print(f"Chunks Created   : {len(self.chunks)}")
-        print(f"Embeddings       : {len(self.embeddings)}")
+        print(f"Documents Processed : {len(self.documents)}")
+        print(f"Chunks Created      : {len(self.chunks)}")
+        print(f"Embeddings          : {len(self.embeddings)}")
         print()
 
-        print(f"Build Time       : {elapsed:.2f} seconds")
+        print(f"Build Time          : {elapsed:.2f} seconds")
         print()
 
         print("Output Files")
@@ -233,4 +229,4 @@ def main():
 
 if __name__ == "__main__":
 
-    main()
+    main()			

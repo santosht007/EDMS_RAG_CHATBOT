@@ -1,95 +1,135 @@
+"""
+============================================================
+EDMS AI Chatbot
+Prompt Builder
+============================================================
+
+Builds the prompt sent to Ollama.
+
+Responsibilities
+----------------
+- Add conversation history
+- Build merged manual context
+- Add system instructions
+- Return final prompt
+"""
+
+from src.builders.context_builder import ContextBuilder
+
+
 class PromptBuilder:
-    """Professional Prompt Builder (Version 2.6)"""
+    """
+    Builds the prompt for the LLM.
+    """
 
     @staticmethod
     def build_prompt(question, documents, conversation_history=None):
+
+        # --------------------------------------------------
+        # Conversation History
+        # --------------------------------------------------
+
         history = "No previous conversation."
+
         if conversation_history:
-            history="\n\n----------------------------------------\n\n".join(
-                [f"User:\n{x.question}\n\nAssistant:\n{x.answer}" for x in conversation_history]
+
+            history = "\n\n----------------------------------------\n\n".join(
+                [
+                    f"User:\n{x.question}\n\nAssistant:\n{x.answer}"
+                    for x in conversation_history
+                ]
             )
 
-        context=""
-        for i,doc in enumerate(documents,1):
-            context += f"""
-DOCUMENT {i}
+        # --------------------------------------------------
+        # Build merged context
+        # --------------------------------------------------
 
-Manual
-------
-{doc.manual_name}
+        context = ContextBuilder.build(documents)
 
-Slide
------
-{doc.slide_number}
-
-Title
------
-{doc.title}
-
-Content
--------
-{doc.text}
-
-============================================================
-"""
+        # --------------------------------------------------
+        # Final Prompt
+        # --------------------------------------------------
 
         return f"""
 ROLE
 
 You are an experienced EDMS Support Engineer.
 
-Answer ONLY using the retrieved EDMS manuals.
+Your responsibility is to answer user questions ONLY using the retrieved EDMS manuals.
 
 Never use outside knowledge.
 
-============================================================
+Never guess.
 
-GUIDELINES
-
-• Answer naturally and professionally.
-• Keep answers concise.
-• Never invent menus, buttons, workflows, permissions or system behaviour.
-• Never mention AI, retrieval, prompts or internal reasoning.
-• Use only documented information.
-
-If none of the retrieved manuals answer the question, reply exactly:
-
-"The manuals do not specify this information."
+Never invent any menu, button, workflow, permission or system behavior.
 
 ============================================================
 
-PROCEDURES
+IMPORTANT
 
-If the manuals describe a procedure:
+Before answering:
 
-• Preserve the original procedure.
-• Preserve existing numbering exactly as written.
-• Do NOT create duplicate numbering.
-• Do NOT renumber existing numbered or bulleted steps.
-• Only create numbered steps if the manuals contain procedural text without numbering.
-• Never add additional steps.
+1. Read ALL retrieved manual sections carefully.
+
+2. Combine information from ALL retrieved slides.
+
+3. If different slides describe different parts of the same procedure, merge them into ONE complete procedure.
+
+4. Never stop after reading the first matching slide.
+
+5. Never omit documented steps.
+
+6. If multiple slides repeat the same instruction, mention it only once.
 
 ============================================================
 
-NOTE
+WHEN INFORMATION IS AVAILABLE
 
-If the manuals contain documented conditions, include:
+Answer naturally.
+
+Write the COMPLETE procedure.
+
+Preserve numbered steps whenever possible.
+
+If manuals contain Notes, Restrictions or Conditions, include them under:
 
 Note:
-<conditions>
 
-Otherwise include:
+Do NOT mention:
 
-Note:
-None.
+- DOCUMENT 1
+- DOCUMENT 2
+- multiple manuals
+- retrieved manuals
+- retrieved documents
+- according to the manuals
+- according to the documents
+
+Write as if you are the EDMS support engineer.
 
 ============================================================
 
-Do NOT include:
-- Summary
-- Procedure
-- Warnings
-- Reference
+WHEN INFORMATION IS NOT AVAILABLE
+
+If NONE of the retrieved manuals answer the question, reply EXACTLY with:
+
+Sorry for the inconvenience, the above question is not covered in Manual.
+
+Please contact EDMS Helpdesk support:
+
+edms_support@rntbci-nissan.com
+
+Do NOT attempt to answer.
+
+============================================================
+
+DO NOT INCLUDE
+
+- References
+- Manual names
+- Slide numbers
+- Internal reasoning
+- AI explanations
 
 ============================================================
 
@@ -99,7 +139,7 @@ PREVIOUS CONVERSATION
 
 ============================================================
 
-RETRIEVED MANUALS
+EDMS MANUAL CONTENT
 
 {context}
 
@@ -111,20 +151,19 @@ USER QUESTION
 
 ============================================================
 
-FINAL RESPONSE FORMAT
+FINAL INSTRUCTIONS
 
-Answer directly.
+Think carefully.
 
-If numbered steps already exist in the manuals, preserve them exactly.
+Read ALL manual content.
 
-Otherwise produce short numbered steps.
+Merge related procedures into one complete answer.
 
-End with:
+Do NOT summarize.
 
-Note:
-None.
+Do NOT shorten procedures.
 
-(or documented conditions only)
+Do NOT invent missing information.
 
-Do not output a Reference section.
+Return ONLY the final answer.
 """

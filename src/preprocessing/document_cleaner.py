@@ -1,20 +1,23 @@
 """
 Document Cleaner
 
-This module cleans raw text extracted from PowerPoint slides
-before it is chunked and indexed into FAISS.
+Cleans raw text extracted from PowerPoint and Word documents
+before chunking and FAISS indexing.
 
-Version: 3.0
+Version: 4.0
 """
 
 
 import re
 
 
+
 class DocumentCleaner:
     """
     Cleans extracted document text.
     """
+
+
 
     @staticmethod
     def clean(text: str) -> str:
@@ -23,73 +26,124 @@ class DocumentCleaner:
         """
 
         if not text:
+
             return ""
 
+
         text = DocumentCleaner.remove_extra_spaces(text)
+
         text = DocumentCleaner.remove_extra_blank_lines(text)
+
         text = DocumentCleaner.fix_duplicate_numbering(text)
+
         text = DocumentCleaner.fix_duplicate_bullets(text)
+
+        text = DocumentCleaner.remove_toc_sections(text)
+
         text = DocumentCleaner.normalize_title(text)
+
 
         return text.strip()
 
-    # --------------------------------------------------
+
+
+    # ==================================================
+    # Remove Extra Spaces
+    # ==================================================
 
     @staticmethod
     def remove_extra_spaces(text):
 
-        # Replace multiple spaces/tabs with one space
-        text = re.sub(r"[ \t]+", " ", text)
+        """
+        Replace multiple spaces/tabs with one space.
+        """
+
+        text = re.sub(
+            r"[ \t]+",
+            " ",
+            text
+        )
 
         return text
 
-    # --------------------------------------------------
+
+
+    # ==================================================
+    # Remove Blank Lines
+    # ==================================================
 
     @staticmethod
     def remove_extra_blank_lines(text):
 
-        # Reduce multiple blank lines to one
-        text = re.sub(r"\n{3,}", "\n\n", text)
+        """
+        Reduce multiple blank lines.
+        """
+
+        text = re.sub(
+            r"\n{3,}",
+            "\n\n",
+            text
+        )
 
         return text
 
-    # --------------------------------------------------
+
+
+    # ==================================================
+    # Fix Duplicate Numbering
+    # ==================================================
 
     @staticmethod
     def fix_duplicate_numbering(text):
+
         """
-        Converts
+        Converts:
 
         ①
-        ①Click...
+        ① Click
 
-        into
+        into:
 
-        ① Click...
+        ① Click
         """
 
-        numbers = "①②③④⑤⑥⑦⑧⑨⑩"
+        numbers = (
+            "①②③④⑤⑥⑦⑧⑨⑩"
+        )
 
-        for n in numbers:
 
-            pattern = rf"{n}\s*\n\s*{n}"
-            replacement = f"{n} "
+        for number in numbers:
 
-            text = re.sub(pattern, replacement, text)
+            pattern = rf"{number}\s*\n\s*{number}"
+
+            replacement = f"{number} "
+
+
+            text = re.sub(
+                pattern,
+                replacement,
+                text
+            )
+
 
         return text
 
-    # --------------------------------------------------
+
+
+    # ==================================================
+    # Fix Duplicate Bullets
+    # ==================================================
 
     @staticmethod
     def fix_duplicate_bullets(text):
+
         """
-        Converts
+        Converts:
 
         •
-        •Upload
+        • Upload
 
-        into
+        into:
 
         • Upload
         """
@@ -100,42 +154,172 @@ class DocumentCleaner:
             text
         )
 
+
         return text
 
-    # --------------------------------------------------
+
+
+    # ==================================================
+    # Remove Table Of Contents
+    # ==================================================
 
     @staticmethod
-    def normalize_title(text):
+    def remove_toc_sections(text):
+
         """
-        Removes numbering from slide titles.
+        Removes Table Of Contents noise.
 
-        Example
+        Example removed:
 
-        2.Edit Document attribute
+        Table Of Contents
 
-        becomes
+        1.ED Introduction
+        2.Pre-requisites
+        3.Registration
 
-        Edit Document attribute
+
+        Keeps:
+
+        Actual procedure descriptions.
         """
+
 
         lines = text.splitlines()
 
+
         cleaned = []
 
-        first_title_cleaned = False
+
+        skip_mode = False
+
+
 
         for line in lines:
 
-            if not first_title_cleaned:
+
+            clean_line = line.strip()
+
+
+
+            if not clean_line:
+
+                continue
+
+
+
+            lower = clean_line.lower()
+
+
+
+            # ------------------------------------------
+            # Detect TOC header
+            # ------------------------------------------
+
+            if (
+                "table of contents" in lower
+                or
+                lower == "contents"
+            ):
+
+                skip_mode = True
+
+                continue
+
+
+
+            # ------------------------------------------
+            # Remove TOC numbered entries
+            # ------------------------------------------
+
+            if skip_mode:
+
+
+                # Examples:
+                # 1. ED Introduction
+                # 2-1 URL and Signing In
+                # 3. Registration
+
+
+                if re.match(
+                    r"^\d+([.-]\d+)?[\s\.\-]",
+                    clean_line
+                ):
+
+                    continue
+
+
+
+                # Stop skipping when real text starts
+
+                if (
+                    len(clean_line) > 80
+                    or
+                    clean_line.endswith(".")
+                ):
+
+                    skip_mode = False
+
+
+
+            cleaned.append(
+                clean_line
+            )
+
+
+        return "\n".join(cleaned)
+
+
+
+    # ==================================================
+    # Normalize Title
+    # ==================================================
+
+    @staticmethod
+    def normalize_title(text):
+
+        """
+        Removes numbering from first title.
+
+        Example:
+
+        2.Edit Document Attribute
+
+        becomes:
+
+        Edit Document Attribute
+        """
+
+
+        lines = text.splitlines()
+
+
+        cleaned = []
+
+
+        first_line = True
+
+
+
+        for line in lines:
+
+
+            if first_line:
+
 
                 line = re.sub(
-                    r"^\d+[\.\-: ]+",
+                    r"^\d+[\.\-:\s]+",
                     "",
                     line
                 )
 
-                first_title_cleaned = True
 
-            cleaned.append(line)
+                first_line = False
+
+
+
+            cleaned.append(
+                line
+            )
+
 
         return "\n".join(cleaned)
